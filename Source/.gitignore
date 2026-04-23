@@ -1,0 +1,14 @@
+# YOLOv8 모델 파일 (너무 커서 Git에 포함하지 않음)
+*.onnx
+models/*.onnx
+
+# 로컬 개발 파일
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

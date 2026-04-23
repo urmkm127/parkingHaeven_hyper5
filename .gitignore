@@ -1,0 +1,41 @@
+# Original Python-based Parking Detector (reference only)
+Parking-Detector/
+
+# Claude Code
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+
+# Local environment files
+.env
+.env.local
+
+# Large binary files
+*.onnx.bak
