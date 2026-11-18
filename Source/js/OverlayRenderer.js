@@ -254,7 +254,8 @@ export class OverlayRenderer {
             // Skip drawing if not in any region
             if (!isInRegion) return;
 
-            const { x, y, width, height, label, confidence } = detection.bbox;
+            const { x, y, width, height } = detection.bbox;
+            const { label, confidence } = detection;
             const color = label === 'car' ? '#3b82f6' : '#8b5cf6';
 
             this.ctx.strokeStyle = color;

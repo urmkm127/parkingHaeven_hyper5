@@ -2,6 +2,7 @@ import { StorageManager } from './StorageManager.js';
 import { MediaHandler } from './MediaHandler.js';
 import { OverlayRenderer } from './OverlayRenderer.js';
 import { YOLODetector } from './YOLODetector.js';
+import { ArUcoBridge } from './ArUcoBridge.js';
 
 class ParkingApp {
     constructor() {
@@ -10,7 +11,7 @@ class ParkingApp {
 
         this.mediaHandler = new MediaHandler(this.mainCanvas);
         this.overlayRenderer = new OverlayRenderer(this.overlayCanvas, this.mainCanvas);
-        this.detector = new YOLODetector('/models/yolov8n.onnx');
+        this.detector = new YOLODetector('/models/parking_cars.onnx');
 
         this.currentSourceType = 'webcam';
         this.currentSourceId = 'LIVE_WEBCAM';
@@ -28,6 +29,7 @@ class ParkingApp {
         setTimeout(() => this.setEditingMode('add'), 100);
 
         this.init();
+        this.arucoBridge = new ArUcoBridge(this.mediaHandler);
     }
 
     init() {

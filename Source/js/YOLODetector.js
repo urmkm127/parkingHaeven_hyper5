@@ -1,10 +1,10 @@
 // YOLOv8 ONNX 추론 엔진
 export class YOLODetector {
-    constructor(modelPath = '/models/yolov8n.onnx') {
+    constructor(modelPath = '/models/parking_cars.onnx') {
         this.modelPath = modelPath;
         this.session = null;
         this.inputSize = 640;
-        this.labels = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat'];
+        this.labels = ['car'];
         this.isInitialized = false;
     }
 
@@ -12,12 +12,7 @@ export class YOLODetector {
         if (this.isInitialized) return;
 
         try {
-            ort.env.wasm.wasmPaths = {
-                'ort-wasm.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort-wasm.wasm',
-                'ort-wasm-threaded.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort-wasm-threaded.wasm',
-                'ort-wasm-simd.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort-wasm-simd.wasm',
-                'ort-wasm-simd-threaded.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm'
-            };
+            ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/';
 
             this.session = await ort.InferenceSession.create(this.modelPath);
 
@@ -56,7 +51,7 @@ export class YOLODetector {
                     const inputIdx = c * this.inputSize * this.inputSize + y * this.inputSize + x;
 
                     if (x < offsetX || x >= offsetX + newWidth || y < offsetY || y >= offsetY + newHeight) {
-                        resized[inputIdx] = 0;
+                        resized[inputIdx] = 114 / 255;
                     } else {
                         const srcX = Math.floor((x - offsetX) / scale);
                         const srcY = Math.floor((y - offsetY) / scale);
@@ -134,8 +129,8 @@ export class YOLODetector {
             }
 
             // Apply confidence threshold (keep vehicle types)
-            if (maxScore > 0.3 && (maxClass === 2 || maxClass === 5 || maxClass === 7)) {
-                // class 2 = car, 5 = bus, 7 = truck
+            if (maxScore > 0.3 && (maxClass === 0)) {
+                // Custom single class: 0 = car
                 const x = data[(0) * numDetections + i];
                 const y = data[(1) * numDetections + i];
                 const w = data[(2) * numDetections + i];
@@ -154,7 +149,7 @@ export class YOLODetector {
                 const clippedY2 = Math.max(0, Math.min(canvasHeight, y2));
 
                 if (clippedX2 > clippedX1 && clippedY2 > clippedY1) {
-                    const label = maxClass === 2 ? 'car' : (maxClass === 5 ? 'bus' : 'truck');
+                    const label = 'car';
                     detections.push({
                         bbox: {
                             x: clippedX1,
@@ -175,7 +170,25 @@ export class YOLODetector {
             }
         }
 
-        return detections;
+        return this.nonMaximumSuppression(detections, 0.45);
+    }
+
+    nonMaximumSuppression(detections, threshold) {
+        const sorted = [...detections].sort((a, b) => b.confidence - a.confidence);
+        const kept = [];
+        while (sorted.length) {
+            const best = sorted.shift();
+            kept.push(best);
+            for (let i = sorted.length - 1; i >= 0; i--) {
+                const a = best.bbox, b = sorted[i].bbox;
+                const w = Math.max(0, Math.min(a.x+a.width, b.x+b.width)-Math.max(a.x,b.x));
+                const h = Math.max(0, Math.min(a.y+a.height, b.y+b.height)-Math.max(a.y,b.y));
+                const overlap = w*h;
+                const union = a.width*a.height + b.width*b.height - overlap;
+                if (union > 0 && overlap/union > threshold) sorted.splice(i, 1);
+            }
+        }
+        return kept;
     }
 
     checkParkingOccupancy(regions, detections) {

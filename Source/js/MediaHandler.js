@@ -13,7 +13,7 @@ export class MediaHandler {
     async initWebcam(deviceId = null) {
         try {
             const constraints = {
-                video: deviceId ? { deviceId: { exact: deviceId } } : true
+                video: { width: { ideal: 1920 }, height: { ideal: 1080 }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) }
             };
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
